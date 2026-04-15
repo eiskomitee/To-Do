@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Meine Ziele</title>
+  <!-- PWA -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Meine Ziele" />
+  <meta name="theme-color" content="#0f0e0c" />
+  <link rel="apple-touch-icon" id="apple-icon" />
+  <link rel="icon" id="favicon" type="image/svg+xml" />
+  <link rel="manifest" id="pwa-manifest" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0e0c;
+      --surface:  #1a1814;
+      --card:     #211f1a;
+      --border:   #2e2b24;
+      --accent:   #e8a84c;
+      --warm:     #c97d4e;
+      --green:    #6dba8a;
+      --text:     #f2ede4;
+      --muted:    #7a7060;
+      --soft:     #a89880;
+      --sheet-bg: #1c1a15;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 18px 120px;
+      overflow-x: hidden;
+    }
+
+    /* Warm ambient glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -160px; left: -100px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(232,168,76,0.055) 0%, transparent 65%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; right: -80px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(201,125,78,0.04) 0%, transparent 65%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .container { width: 100%; max-width: 520px; position: relative; z-index: 1; }
+
+    /* ── Header ───────────────────────────── */
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .title-block h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.9rem, 7vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+    }
+    .title-block h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .greeting {
+      font-size: 0.72rem;
+      color: var(--soft);
+      margin-top: 5px;
+      font-weight: 300;
+    }
+    #notif-status {
+      font-size: 0.58rem;
+      padding: 5px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+      margin-top: 6px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    #notif-status.ok { border-color: var(--green); color: var(--green); }
+    #notif-status.no { border-color: var(--warm); color: var(--warm); }
+
+    /* ── Daily quote ──────────────────────── */
+    .quote-card {
+      background: linear-gradient(135deg, #211f1a 0%, #1e1c16 100%);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .quote-card::before {
+      content: '"';
+      position: absolute;
+      top: -10px; right: 14px;
+      font-family: 'Playfair Display', serif;
+      font-size: 5rem;
+      color: rgba(232,168,76,0.08);
+      line-height: 1;
+      pointer-events: none;
+    }
+    .quote-text {
+      font-size: 0.82rem;
+      line-height: 1.65;
+      color: var(--soft);
+      font-style: italic;
+      font-weight: 300;
+    }
+    .quote-text strong { color: var(--accent); font-style: normal; font-weight: 500; }
+
+    /* ── Streak & Progress ────────────────── */
+    .momentum-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .streak-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 0 0 auto;
+    }
+    .streak-flame { font-size: 1.6rem; line-height: 1; }
+    .streak-info {}
+    .streak-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .streak-label { font-size: 0.58rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .progress-card {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .progress-label { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .progress-pct   { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--accent); }
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--surface);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--warm));
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(.4,0,.2,1);
+      min-width: 4px;
+    }
+    .progress-sub {
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-top: 7px;
+    }
+    .progress-sub span { color: var(--soft); }
+
+    /* ── Tabs ─────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 5px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      font-size: 0.6rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 8px 2px;
+      border-radius: 9px;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .tab.active { background: var(--card); color: var(--accent); border: 1px solid var(--border); }
+
+    /* ── Filter ───────────────────────────── */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-size: 0.6rem;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .filter-btn.active { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Section title ────────────────────── */
+    .section-title {
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .count {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1px 8px;
+      color: var(--accent);
+      font-size: 0.56rem;
+    }
+    .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── Goal items ───────────────────────── */
+    #goal-list { list-style: none; }
+
+    .goal-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px 18px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      animation: slideIn 0.24s ease;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .goal-item:active { transform: scale(0.99); }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-7px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .goal-item.reached {
+      opacity: 0.28;
+      border-color: rgba(109,186,138,0.15);
+    }
+    .goal-item.reached .goal-text { text-decoration: line-through; color: var(--muted); }
+    .goal-item.needs-attention { border-color: rgba(201,125,78,0.35); }
+
+    .check-btn {
+      width: 28px; height: 28px; margin-top: 2px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; color: transparent;
+      transition: all 0.2s;
+    }
+    .check-btn:active { transform: scale(0.85); }
+    .goal-item.reached .check-btn {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    .goal-content { flex: 1; min-width: 0; }
+    .goal-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      line-height: 1.5;
+      word-break: break-word;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .goal-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .badge {
+      font-size: 0.55rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .badge-repeat      { border-color: #4a6a80; color: #6a9fbf; }
+    .badge-due         { border-color: var(--border); color: var(--muted); }
+    .badge-attention   { border-color: rgba(201,125,78,0.5); color: var(--warm); }
+    .badge-today       { border-color: rgba(232,168,76,0.4); color: var(--accent); }
+    .badge-cat         { border-color: #4a3a6a; color: #8a6abf; }
+
+    .del-btn {
+      background: none; border: none;
+      color: #2a2820;
+      cursor: pointer; font-size: 1rem;
+      padding: 4px 6px; border-radius: 4px;
+      transition: color 0.15s; flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .del-btn:active { color: #c05050; }
+
+    /* ── Empty state ──────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 44px 20px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 2.2rem; margin-bottom: 12px; }
+    .empty-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--soft); margin-bottom: 8px; }
+    .empty-sub { font-size: 0.72rem; line-height: 1.7; color: var(--muted); }
+    .empty-sub strong { color: var(--accent); }
+
+    /* ── FAB ──────────────────────────────── */
+    #fab {
+      position: fixed;
+      bottom: 34px; right: 24px;
+      width: 62px; height: 62px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--warm) 100%);
+      border: none;
+      color: #1a1610;
+      font-size: 2rem;
+      font-weight: 300;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(232,168,76,0.3), 0 2px 10px rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 50;
+      transition: transform 0.28s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
+      line-height: 1;
+    }
+    #fab:active { transform: scale(0.93); }
+    #fab.open {
+      transform: rotate(45deg) scale(1.05);
+      box-shadow: 0 8px 24px rgba(232,168,76,0.15), 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    /* ── Backdrop ─────────────────────────── */
+    #backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 60;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #backdrop.show { opacity: 1; pointer-events: all; }
+
+    /* ── Bottom Sheet ─────────────────────── */
+    #sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--sheet-bg);
+      border-top: 1px solid var(--border);
+      border-radius: 24px 24px 0 0;
+      padding: 0 20px 44px;
+      z-index: 70;
+      transform: translateY(100%);
+      transition: transform 0.38s cubic-bezier(.32,.72,0,1);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #sheet.open { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 38px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 14px auto 22px;
+    }
+    .sheet-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      margin-bottom: 6px;
+    }
+    .sheet-title em { font-style: italic; color: var(--accent); }
+    .sheet-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-weight: 300;
+    }
+
+    #goal-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      padding: 13px 15px;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+      font-weight: 400;
+    }
+    #goal-input::placeholder { color: var(--muted); font-weight: 300; }
+    #goal-input:focus { border-color: var(--accent); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label {
+      font-size: 0.56rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+    }
+    .form-group select,
+    .form-group input[type="date"],
+    .form-group input[type="time"] {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      padding: 9px 11px;
+      border-radius: 10px;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .form-group select:focus,
+    .form-group input:focus { border-color: var(--accent); }
+    .form-group select option { background: #1c1a15; }
+
+    #save-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--warm) 100%);
+      border: none;
+      color: #1a1610;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.15s, transform 0.12s;
+    }
+    #save-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+    /* ── Celebration overlay ──────────────── */
+    #celebrate {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #celebrate.show { opacity: 1; }
+    .celebrate-msg {
+      background: var(--card);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 20px 28px;
+      text-align: center;
+      transform: scale(0.8);
+      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+    }
+    #celebrate.show .celebrate-msg { transform: scale(1); }
+    .celebrate-icon { font-size: 2.4rem; margin-bottom: 8px; }
+    .celebrate-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--accent);
+      margin-bottom: 5px;
+    }
+    .celebrate-sub { font-size: 0.75rem; color: var(--soft); line-height: 1.5; }
+
+    /* Confetti dots */
+    .confetti-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      animation: confettiFall 1.2s ease-in forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── iOS info ─────────────────────────── */
+    .info-box {
+      background: var(--surface);
+      border: 1px solid rgba(201,125,78,0.2);
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 0.64rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .info-box strong { color: var(--warm); }
+
+    /* ── Toast ────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 112px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--card); border: 1px solid var(--accent);
+      color: var(--text); font-size: 0.72rem;
+      padding: 9px 18px; border-radius: 20px;
+      white-space: nowrap; transition: transform 0.25s, opacity 0.25s;
+      z-index: 300; pointer-events: none; opacity: 0;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="title-block">
+      <h1>Meine <em>Ziele</em></h1>
+      <div class="greeting" id="greeting">Guten Morgen 🌤</div>
+    </div>
+    <div id="notif-status">⏳ …</div>
+  </header>
+
+  <div class="info-box" id="notif-info" style="display:none">
+    <strong>📱 iOS/Safari:</strong> Push-Benachrichtigungen werden nicht unterstützt. Erinnerungen erscheinen als In-App-Hinweis, solange die Seite offen ist.
+  </div>
+
+  <!-- Daily quote -->
+  <div class="quote-card">
+    <div class="quote-text" id="daily-quote">Lade…</div>
+  </div>
+
+  <!-- Streak + Progress -->
+  <div class="momentum-row">
+    <div class="streak-card">
+      <div class="streak-flame">🔥</div>
+      <div class="streak-info">
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-label">Tage-Streak</div>
+      </div>
+    </div>
+    <div class="progress-card">
+      <div class="progress-header">
+        <span class="progress-label" id="prog-label">Heutiger Fortschritt</span>
+        <span class="progress-pct" id="prog-pct">—</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-sub" id="prog-sub">Noch nichts erreicht – <span>du schaffst das!</span></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('all')">Alle</button>
+    <button class="tab" onclick="setTab('today')">Heute</button>
+    <button class="tab" onclick="setTab('week')">Woche</button>
+    <button class="tab" onclick="setTab('month')">Monat</button>
+    <button class="tab" onclick="setTab('reached')">Erreicht</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all')">Alle</button>
+    <button class="filter-btn" onclick="setFilter('attention')">🌿 Braucht Aufmerksamkeit</button>
+    <button class="filter-btn" onclick="setFilter('duetoday')">✨ Heute</button>
+    <button class="filter-btn" onclick="setFilter('Arbeit')">💼 Arbeit</button>
+    <button class="filter-btn" onclick="setFilter('Sport')">💪 Sport</button>
+    <button class="filter-btn" onclick="setFilter('Gesundheit & Wachstum')">🌱 Gesundheit & Wachstum</button>
+    <button class="filter-btn" onclick="setFilter('Haushalt')">🏠 Haushalt</button>
+    
+  </div>
+
+  <!-- Section -->
+  <div class="section-title">
+    <span id="section-label">In Arbeit</span>
+    <span class="count" id="section-count">0</span>
+  </div>
+
+  <ul id="goal-list"></ul>
+
+</div>
+
+<!-- FAB -->
+<button id="fab" onclick="toggleSheet()">+</button>
+
+<!-- Backdrop -->
+<div id="backdrop" onclick="editingId ? closeEditSheet() : closeSheet()"></div>
+
+<!-- Bottom Sheet -->
+<div id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Neues <em>Ziel</em> setzen</div>
+  <div class="sheet-sub">Jedes große Ziel beginnt mit einem ersten Schritt. 🌱</div>
+
+  <input id="goal-input" type="text" placeholder="Was möchtest du erreichen?" maxlength="140"
+         onkeydown="if(event.key==='Enter') addGoal()" />
+
+  <div class="form-grid">
+    <div class="form-group">
+      <span class="form-label">Wiederholung</span>
+      <select id="repeat-sel">
+        <option value="none">Einmalig</option>
+        <option value="daily">Täglich</option>
+        <option value="weekly">Wöchentlich</option>
+        <option value="monthly">Monatlich</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <span class="form-label">Bereich</span>
+      <select id="cat-sel">
+        <option value="">— keiner —</option>
+        <option value="Arbeit">💼 Arbeit</option>
+        <option value="Sport">💪 Sport</option>
+        <option value="Gesundheit & Wachstum">🌱 Gesundheit & Wachstum</option>
+        <option value="Haushalt">🏠 Haushalt</option>
+        
+      </select>
+    </div>
+    <div class="form-group">
+      <span class="form-label">Bis wann</span>
+      <input type="date" id="due-date" />
+    </div>
+    <div class="form-group">
+      <span class="form-label">Erinnerung</span>
+      <input type="time" id="remind-time" />
+    </div>
+  </div>
+
+  <button id="save-btn" onclick="addGoal()">Ziel speichern ✦</button>
+</div>
+
+<!-- Celebration -->
+<div id="celebrate">
+  <div class="celebrate-msg">
+    <div class="celebrate-icon" id="cel-icon">🎯</div>
+    <div class="celebrate-title" id="cel-title">Ziel erreicht!</div>
+    <div class="celebrate-sub" id="cel-sub">Stolz auf dich.</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let goals      = JSON.parse(localStorage.getItem('goals_v1') || '[]');
+  let timers     = {};
+  let activeTab  = 'all';
+  let activeFilter = 'all';
+  let sheetOpen  = false;
+
+  const NOTIF_OK = (function() {
+    try { return typeof Notification !== 'undefined'; } catch(e) { return false; }
+  })();
+
+  // ── Motivational quotes ──────────────────────────────
+  const QUOTES = [
+    { text: 'Du musst nicht <strong>perfekt</strong> sein. Du musst nur <strong>anfangen</strong>.' },
+    { text: 'Jeder Schritt vorwärts ist ein <strong>Sieg</strong> – egal wie klein.' },
+    { text: 'Du bist nicht da, wo du sein möchtest. Aber du bist <strong>nicht mehr da, wo du warst</strong>.' },
+    { text: 'Fortschritt, nicht Perfektion. <strong>Jeden Tag ein bisschen mehr</strong>.' },
+    { text: 'Die härtesten Tage formen die <strong>stärkste Version von dir</strong>.' },
+    { text: 'Du hast schon schwieriges überstanden. <strong>Das hier ist kein Ausnahme</strong>.' },
+    { text: 'Manchmal ist Ruhe nehmen auch ein <strong>mutiger Schritt</strong>.' },
+    { text: 'Du verdienst die <strong>gleiche Fürsorge</strong>, die du anderen gibst.' },
+    { text: 'Kleine, <strong>beständige Schritte</strong> schlagen schnelle Sprünge.' },
+    { text: 'Heute ist ein neuer Anfang – <strong>nutze ihn sanft</strong>.' },
+    { text: 'Glaub an den Prozess. <strong>Ergebnisse kommen</strong>, wenn du dran bleibst.' },
+    { text: 'Du bist bereits auf dem <strong>richtigen Weg</strong> – allein dadurch, dass du es versuchst.' },
+  ];
+
+  const CELEBRATIONS = [
+    { icon:'🌟', title:'Ziel erreicht!', sub:'Jeder Erfolg zählt – auch dieser.' },
+    { icon:'🎯', title:'Geschafft!', sub:'Du hast es durchgezogen. Sei stolz.' },
+    { icon:'✨', title:'Wunderbar!', sub:'Ein weiterer Schritt in die richtige Richtung.' },
+    { icon:'🏆', title:'Erreicht!', sub:'Das ist kein Zufall – das bist du.' },
+    { icon:'💛', title:'Gut gemacht!', sub:'Du machst Fortschritte. Das sieht man.' },
+    { icon:'🌱', title:'Gewachsen!', sub:'Jedes erreichte Ziel ist Wachstum.' },
+  ];
+
+  // ── Greeting ─────────────────────────────────────────
+  function setGreeting() {
+    const h = new Date().getHours();
+    const g = h < 12 ? 'Guten Morgen 🌤' : h < 17 ? 'Guten Nachmittag ☀️' : h < 21 ? 'Guten Abend 🌇' : 'Gute Nacht 🌙';
+    document.getElementById('greeting').textContent = g;
+  }
+
+  function setQuote() {
+    const idx = new Date().getDate() % QUOTES.length;
+    document.getElementById('daily-quote').innerHTML = QUOTES[idx].text;
+  }
+
+  // ── Streak ───────────────────────────────────────────
+  function getStreak() {
+    const streakData = JSON.parse(localStorage.getItem('streak_v1') || '{"days":0,"lastDate":""}');
+    return streakData;
+  }
+  function updateStreak() {
+    const td = today();
+    const s  = getStreak();
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    const yd = yesterday.toISOString().slice(0,10);
+
+    const reachedToday = goals.some(g => g.done && g.reachedDate === td);
+    if (reachedToday) {
+      if (s.lastDate === td) { /* already counted */ }
+      else if (s.lastDate === yd) { s.days += 1; s.lastDate = td; }
+      else { s.days = 1; s.lastDate = td; }
+      localStorage.setItem('streak_v1', JSON.stringify(s));
+    }
+    document.getElementById('streak-num').textContent = s.days;
+  }
+
+  // ── Sheet ─────────────────────────────────────────────
+  function toggleSheet() { sheetOpen ? closeSheet() : openSheet(); }
+  function openSheet() {
+    sheetOpen = true;
+    document.getElementById('sheet').classList.add('open');
+    document.getElementById('backdrop').classList.add('show');
+    document.getElementById('fab').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('goal-input').focus(), 360);
+  }
+  function closeSheet() {
+    sheetOpen = false;
+    document.getElementById('sheet').classList.remove('open');
+    document.getElementById('backdrop').classList.remove('show');
+    document.getElementById('fab').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // ── Notifications ─────────────────────────────────────
+  function initNotif() {
+    const el = document.getElementById('notif-status');
+    if (!NOTIF_OK) {
+      el.textContent = '📱 In-App'; el.className = 'no';
+      document.getElementById('notif-info').style.display = 'block';
+      return;
+    }
+    const p = Notification.permission;
+    if (p === 'granted') { el.textContent = '✅ Push aktiv'; el.className = 'ok'; }
+    else if (p === 'denied') { el.textContent = '❌ Blockiert'; el.className = 'no'; }
+    else {
+      el.textContent = '🔔 Aktivieren';
+      el.onclick = async () => {
+        const r = await Notification.requestPermission();
+        initNotif();
+        if (r === 'granted') { scheduleAll(); showToast('✅ Erinnerungen aktiv!'); }
+      };
+    }
+  }
+
+  function scheduleNotification(g) {
+    clearTimeout(timers[g.id]);
+    if (!g.dueDate || !g.remindTime || g.done) return;
+    const delay = new Date(g.dueDate + 'T' + g.remindTime).getTime() - Date.now();
+    if (delay <= 0) return;
+    timers[g.id] = setTimeout(() => {
+      showToast('🎯 ' + g.text.slice(0, 50));
+      if (NOTIF_OK && Notification.permission === 'granted') {
+        try { new Notification('Ziel-Erinnerung 🎯', { body: g.text }); } catch(e) {}
+      }
+    }, delay);
+  }
+
+  // ── Edit ──────────────────────────────────────────────
+  let editingId = null;
+
+  function editGoal(id) {
+    const g = goals.find(g => g.id === id);
+    if (!g) return;
+    editingId = id;
+    document.getElementById('edit-input').value   = g.text;
+    document.getElementById('edit-repeat').value  = g.repeat || 'none';
+    document.getElementById('edit-cat').value     = g.category || '';
+    document.getElementById('edit-date').value    = g.dueDate || '';
+    document.getElementById('edit-time').value    = g.remindTime || '';
+    document.getElementById('edit-sheet').style.transform = 'translateY(0)';
+    document.getElementById('backdrop').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('edit-input').focus(), 360);
+  }
+
+  function closeEditSheet() {
+    editingId = null;
+    document.getElementById('edit-sheet').style.transform = 'translateY(100%)';
+    document.getElementById('backdrop').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function saveEdit() {
+    const g = goals.find(g => g.id === editingId);
+    if (!g) return;
+    const text = document.getElementById('edit-input').value.trim();
+    if (!text) return;
+    g.text       = text;
+    g.repeat     = document.getElementById('edit-repeat').value;
+    g.category   = document.getElementById('edit-cat').value;
+    g.dueDate    = document.getElementById('edit-date').value || null;
+    g.remindTime = document.getElementById('edit-time').value || null;
+    save();
+    scheduleNotification(g);
+    closeEditSheet();
+    render();
+    showToast('Ziel aktualisiert ✦');
+  }
+
+  function scheduleAll() { goals.forEach(scheduleNotification); }
+
+  // ── Helpers ───────────────────────────────────────────
+  function save() { localStorage.setItem('goals_v1', JSON.stringify(goals)); }
+  function today() { return new Date().toISOString().slice(0,10); }
+  function needsAttention(g) { return !g.done && g.dueDate && g.dueDate < today(); }
+  function isDueToday(g)     { return g.dueDate === today(); }
+  function repeatLabel(r)    { return {daily:'Täglich',weekly:'Wöchentlich',monthly:'Monatlich'}[r]||''; }
+  function formatDate(d) {
+    if (!d) return '';
+    const [y,m,day] = d.split('-');
+    return `${day}.${m}.${y}`;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function nextDue(dateStr, repeat) {
+    const d = new Date(dateStr + 'T12:00:00');
+    if (repeat==='daily')   d.setDate(d.getDate()+1);
+    if (repeat==='weekly')  d.setDate(d.getDate()+7);
+    if (repeat==='monthly') d.setMonth(d.getMonth()+1);
+    return d.toISOString().slice(0,10);
+  }
+
+  // ── Add goal ──────────────────────────────────────────
+  function addGoal() {
+    const text = document.getElementById('goal-input').value.trim();
+    if (!text) { document.getElementById('goal-input').focus(); return; }
+
+    const g = {
+      id:        Date.now(),
+      text,
+      done:      false,
+      createdAt: Date.now(),
+      reachedDate: null,
+      repeat:    document.getElementById('repeat-sel').value,
+      category:  document.getElementById('cat-sel').value,
+      dueDate:   document.getElementById('due-date').value || null,
+      remindTime:document.getElementById('remind-time').value || null,
+    };
+
+    goals.unshift(g);
+    save();
+    scheduleNotification(g);
+
+    document.getElementById('goal-input').value  = '';
+    document.getElementById('due-date').value    = today();
+    document.getElementById('remind-time').value = '';
+    document.getElementById('repeat-sel').value  = 'none';
+    document.getElementById('cat-sel').value     = '';
+
+    closeSheet();
+    render();
+    showToast('Ziel gesetzt 🌱');
+  }
+
+  // ── Reach goal ────────────────────────────────────────
+  function toggleGoal(id) {
+    const g = goals.find(g => g.id === id);
+    if (!g) return;
+    g.done = !g.done;
+    g.reachedDate = g.done ? today() : null;
+
+    if (g.done) {
+      celebrate();
+      if (g.repeat !== 'none' && g.dueDate) {
+        const next = nextDue(g.dueDate, g.repeat);
+        const clone = { ...g, id: Date.now()+1, done: false, createdAt: Date.now(), dueDate: next, reachedDate: null };
+        goals.unshift(clone);
+        scheduleNotification(clone);
+      }
+    } else {
+      showToast('Ziel wieder geöffnet');
+    }
+
+    updateStreak();
+    save(); render();
+  }
+
+  // ── Celebration ───────────────────────────────────────
+  function celebrate() {
+    const c = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
+    document.getElementById('cel-icon').textContent  = c.icon;
+    document.getElementById('cel-title').textContent = c.title;
+    document.getElementById('cel-sub').textContent   = c.sub;
+
+    const el = document.getElementById('celebrate');
+    el.classList.add('show');
+
+    // Confetti
+    for (let i = 0; i < 18; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'confetti-dot';
+      const colors = ['#e8a84c','#c97d4e','#6dba8a','#f2ede4','#a89880'];
+      dot.style.cssText = `
+        background:${colors[i%colors.length]};
+        left:${10+Math.random()*80}%;
+        top:${10+Math.random()*40}%;
+        animation-delay:${Math.random()*0.4}s;
+        width:${6+Math.random()*8}px;
+        height:${6+Math.random()*8}px;
+      `;
+      el.appendChild(dot);
+    }
+
+    setTimeout(() => {
+      el.classList.remove('show');
+      el.querySelectorAll('.confetti-dot').forEach(d => d.remove());
+    }, 2200);
+  }
+
+  // ── Delete ────────────────────────────────────────────
+  function deleteGoal(id) {
+    clearTimeout(timers[id]);
+    goals = goals.filter(g => g.id !== id);
+    save(); render();
+  }
+
+  // ── Tabs & Filters ────────────────────────────────────
+  function setTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach((el,i) => {
+      el.classList.toggle('active', ['all','today','week','month','reached'][i] === tab);
+    });
+    render();
+  }
+
+  function setFilter(f) {
+    activeFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(el => {
+      const isAll       = f==='all'       && el.textContent.trim()==='Alle';
+      const isAttention = f==='attention' && el.textContent.includes('Aufmerksamkeit');
+      const isToday     = f==='duetoday'  && el.textContent.includes('Heute');
+      const isCat       = !['all','attention','duetoday'].includes(f) && el.textContent.includes(f);
+      el.classList.toggle('active', isAll||isAttention||isToday||isCat);
+    });
+    render();
+  }
+
+  // ── Render ────────────────────────────────────────────
+  function render() {
+    let list = [...goals];
+
+    // Helper: get start of current week (Monday)
+    function startOfWeek() {
+      const d = new Date(); const day = d.getDay();
+      const diff = (day===0 ? -6 : 1 - day);
+      d.setDate(d.getDate() + diff); d.setHours(0,0,0,0);
+      return d.toISOString().slice(0,10);
+    }
+    function endOfWeek() {
+      const d = new Date(startOfWeek());
+      d.setDate(d.getDate() + 6);
+      return d.toISOString().slice(0,10);
+    }
+    function startOfMonth() {
+      const d = new Date(); d.setDate(1); d.setHours(0,0,0,0);
+      return d.toISOString().slice(0,10);
+    }
+    function endOfMonth() {
+      const d = new Date(); d.setMonth(d.getMonth()+1); d.setDate(0);
+      return d.toISOString().slice(0,10);
+    }
+
+    // Tab filter (time period based)
+    if (activeTab === 'reached') {
+      list = list.filter(g => g.done);
+    } else {
+      list = list.filter(g => !g.done);
+      if (activeTab === 'today') {
+        list = list.filter(g => !g.dueDate || g.dueDate === today());
+      } else if (activeTab === 'week') {
+        const ws = startOfWeek(), we = endOfWeek();
+        list = list.filter(g => !g.dueDate || (g.dueDate >= ws && g.dueDate <= we));
+      } else if (activeTab === 'month') {
+        const ms = startOfMonth(), me = endOfMonth();
+        list = list.filter(g => !g.dueDate || (g.dueDate >= ms && g.dueDate <= me));
+      }
+    }
+
+    // Secondary filter (categories etc), not on reached tab
+    if (activeTab !== 'reached') {
+      if (activeFilter === 'attention') list = list.filter(needsAttention);
+      if (activeFilter === 'duetoday')  list = list.filter(isDueToday);
+      if (!['all','attention','duetoday'].includes(activeFilter))
+        list = list.filter(g => g.category === activeFilter);
+    }
+
+    list.sort((a,b) => {
+      const ao = needsAttention(a)?0 : isDueToday(a)?1 : 2;
+      const bo = needsAttention(b)?0 : isDueToday(b)?1 : 2;
+      if (ao!==bo) return ao-bo;
+      if (a.dueDate&&b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate) return -1; if (b.dueDate) return 1;
+      return b.createdAt-a.createdAt;
+    });
+
+    const ul = document.getElementById('goal-list');
+    if (list.length===0) {
+      ul.innerHTML = `
+        <li class="empty">
+          <div class="empty-icon">${activeTab==='reached'?'🏆':'🌱'}</div>
+          <div class="empty-title">${activeTab==='reached'?'Noch nichts erreicht':'Noch keine Ziele'}</div>
+          <div class="empty-sub">
+            ${activeTab==='reached'
+              ? 'Wenn du ein Ziel abhakst, erscheint es hier.'
+              : 'Tippe auf <strong>+</strong> und setze dein erstes Ziel.<br>Du schaffst mehr als du denkst.'}
+          </div>
+        </li>`;
+    } else {
+      ul.innerHTML = list.map(g => {
+        const na  = needsAttention(g), tod = isDueToday(g), rep = repeatLabel(g.repeat);
+        return `
+          <li class="goal-item ${g.done?'reached':''} ${na?'needs-attention':''}">
+            <button class="check-btn" onclick="toggleGoal(${g.id})">${g.done?'✓':''}</button>
+            <div class="goal-content">
+              <div class="goal-text">${esc(g.text)}</div>
+              <div class="goal-meta">
+                ${rep ? `<span class="badge badge-repeat">🔄 ${rep}</span>` : ''}
+                ${g.category ? `<span class="badge badge-cat">${esc(g.category)}</span>` : ''}
+                ${g.dueDate&&na   ? `<span class="badge badge-attention">🌿 Braucht Aufmerksamkeit · ${formatDate(g.dueDate)}</span>` : ''}
+                ${g.dueDate&&tod&&!na ? `<span class="badge badge-today">✨ Heute</span>` : ''}
+                ${g.dueDate&&!na&&!tod ? `<span class="badge badge-due">📅 ${formatDate(g.dueDate)}</span>` : ''}
+                ${g.remindTime ? `<span class="badge badge-due">⏰ ${g.remindTime}</span>` : ''}
+              </div>
+            </div>
+            <button class="del-btn" onclick="editGoal(${g.id})" style="color:#7a7060">✏️</button>
+                <button class="del-btn" onclick="deleteGoal(${g.id})">✕</button>
+          </li>`;
+      }).join('');
+    }
+
+    // Section label
+    const labels = {all:'In Arbeit', today:'Heute', week:'Diese Woche', month:'Diesen Monat', reached:'Erreicht'};
+    document.getElementById('section-label').textContent = labels[activeTab]||'In Arbeit';
+    document.getElementById('section-count').textContent = list.length;
+
+    // Progress: today's goals first → fallback week → fallback all
+    const td = today();
+
+    // Week range
+    const _wd = new Date(), _wday = _wd.getDay();
+    const _wdiff = (_wday===0 ? -6 : 1-_wday);
+    const _wStart = new Date(_wd); _wStart.setDate(_wd.getDate()+_wdiff); _wStart.setHours(0,0,0,0);
+    const wStartStr = _wStart.toISOString().slice(0,10);
+    const _wEnd = new Date(_wStart); _wEnd.setDate(_wStart.getDate()+6);
+    const wEndStr = _wEnd.toISOString().slice(0,10);
+
+    const goalsToday = goals.filter(g => g.dueDate === td);
+    const goalsWeek  = goals.filter(g => g.dueDate >= wStartStr && g.dueDate <= wEndStr);
+
+    let progGoals, progLabel;
+    if (goalsToday.length > 0) {
+      progGoals = goalsToday;
+      progLabel = 'Heutiger Fortschritt';
+    } else if (goalsWeek.length > 0) {
+      progGoals = goalsWeek;
+      progLabel = 'Wochenfortschritt';
+    } else {
+      progGoals = goals;
+      progLabel = 'Gesamtfortschritt';
+    }
+
+    const progTotal = progGoals.length;
+    const progDone  = progGoals.filter(g => g.done).length;
+    const pct       = progTotal > 0 ? Math.round(progDone / progTotal * 100) : 0;
+
+    document.getElementById('prog-label').textContent = progLabel;
+    document.getElementById('prog-pct').textContent   = progTotal > 0 ? pct+'%' : '—';
+    document.getElementById('prog-bar').style.width   = progTotal > 0 ? pct+'%' : '0%';
+
+    const subs = [
+      'Noch nichts erreicht – <span>du schaffst das!</span>',
+      '<span>Gut gemacht!</span> Weiter so.',
+      '<span>Du bist auf Kurs!</span> Bleib dran.',
+      '<span>Stark!</span> Fast am Ziel.',
+      '<span>Ausgezeichnet!</span> Alles erreicht 🎉',
+    ];
+    const subIdx = pct===0?0 : pct<30?1 : pct<60?2 : pct<100?3 : 4;
+    document.getElementById('prog-sub').innerHTML = progTotal > 0
+      ? subs[subIdx]
+      : 'Keine Ziele für heute – <span>genieß den Tag 🌿</span>';
+  }
+
+  // ── Toast ─────────────────────────────────────────────
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  // ── Init ──────────────────────────────────────────────
+  document.getElementById('due-date').value = today();
+  document.addEventListener('keydown', e => { if(e.key==='Escape') { editingId ? closeEditSheet() : closeSheet(); } });
+  setGreeting();
+  setQuote();
+  initNotif();
+  scheduleAll();
+  updateStreak();
+  render();
+</script>
+
+
+<!-- Edit Sheet -->
+<div id="edit-sheet" style="
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--sheet-bg);
+  border-top:1px solid var(--border);
+  border-radius:24px 24px 0 0;
+  padding:0 20px 44px;
+  z-index:70;
+  transform:translateY(100%);
+  transition:transform 0.38s cubic-bezier(.32,.72,0,1);
+  max-width:600px;margin:0 auto;
+">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Ziel <em>bearbeiten</em></div>
+  <div class="sheet-sub">Passe dein Ziel an. 🌱</div>
+  <input id="edit-input" type="text" maxlength="140" style="
+    width:100%;background:var(--surface);border:1px solid var(--border);
+    color:var(--text);font-family:'DM Sans',sans-serif;font-size:.92rem;
+    padding:13px 15px;border-radius:12px;outline:none;margin-bottom:14px;
+    transition:border-color .2s;
+  " />
+  <div class="form-grid">
+    <div class="form-group">
+      <span class="form-label">Wiederholung</span>
+      <select id="edit-repeat">
+        <option value="none">Einmalig</option>
+        <option value="daily">Täglich</option>
+        <option value="weekly">Wöchentlich</option>
+        <option value="monthly">Monatlich</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <span class="form-label">Bereich</span>
+      <select id="edit-cat">
+        <option value="">— keiner —</option>
+        <option value="Arbeit">💼 Arbeit</option>
+        <option value="Sport">💪 Sport</option>
+        <option value="Gesundheit & Wachstum">🌱 Gesundheit & Wachstum</option>
+        <option value="Haushalt">🏠 Haushalt</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <span class="form-label">Bis wann</span>
+      <input type="date" id="edit-date" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;padding:9px 11px;border-radius:10px;outline:none;appearance:none;-webkit-appearance:none;width:100%;transition:border-color .2s;" />
+    </div>
+    <div class="form-group">
+      <span class="form-label">Erinnerung</span>
+      <input type="time" id="edit-time" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;padding:9px 11px;border-radius:10px;outline:none;appearance:none;-webkit-appearance:none;width:100%;transition:border-color .2s;" />
+    </div>
+  </div>
+  <button onclick="saveEdit()" style="
+    width:100%;background:linear-gradient(135deg,var(--accent),var(--warm));
+    border:none;color:#1a1610;font-family:'DM Sans',sans-serif;
+    font-size:.88rem;font-weight:600;padding:15px;border-radius:12px;
+    cursor:pointer;letter-spacing:.04em;
+  ">Änderungen speichern ✦</button>
+</div>
+
+<script>
+// Icon SVG
+const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="g" cx="35%" cy="25%" r="65%">
+      <stop offset="0%" stop-color="#e8a84c" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#0f0e0c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="#0f0e0c"/>
+  <rect width="512" height="512" rx="115" fill="url(#g)"/>
+  <path d="M256 380 L256 230" stroke="#6dba8a" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <path d="M256 300 Q205 258 178 208 Q228 218 256 272" fill="#6dba8a"/>
+  <path d="M256 275 Q307 232 336 182 Q288 196 256 252" fill="#8fd4a8" opacity="0.9"/>
+  <path d="M256 232 Q218 178 224 132 Q272 158 282 202 Q274 222 256 232Z" fill="#e8a84c"/>
+  <ellipse cx="256" cy="390" rx="68" ry="12" fill="#1e1c17"/>
+  <circle cx="222" cy="388" r="9" fill="#2a2720"/>
+  <circle cx="256" cy="394" r="11" fill="#2a2720"/>
+  <circle cx="290" cy="388" r="9" fill="#2a2720"/>
+</svg>`;
+
+(function initIcon() {
+  const b64 = btoa(ICON_SVG);
+  const dataUrl = 'data:image/svg+xml;base64,' + b64;
+  document.getElementById('favicon').href = dataUrl;
+
+  const img = new Image();
+  img.onload = function() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 512;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const png = c.toDataURL('image/png');
+    document.getElementById('apple-icon').href = png;
+
+    const manifest = {
+      name: 'Meine Ziele',
+      short_name: 'Ziele 🌱',
+      start_url: '.',
+      display: 'standalone',
+      background_color: '#0f0e0c',
+      theme_color: '#0f0e0c',
+      description: 'Dein persoenlicher Wachstums-Begleiter',
+      icons: [
+        {src: png, sizes: '512x512', type: 'image/png', purpose: 'any maskable'},
+        {src: png, sizes: '192x192', type: 'image/png'}
+      ]
+    };
+    const mUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:'application/json'}));
+    document.getElementById('pwa-manifest').href = mUrl;
+
+    if ('serviceWorker' in navigator) {
+      const sw = `const C='ziele-v1';
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});
+self.addEventListener('push',e=>{const d=e.data?e.data.json():{title:'Meine Ziele',body:'Erinnerung!'};
+e.waitUntil(self.registration.showNotification(d.title,{body:d.body}));});`;
+      navigator.serviceWorker.register(
+        URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))
+      ).catch(()=>{});
+    }
+  };
+  img.src = 'data:image/svg+xml;base64,' + b64;
+})();
+
+// Install prompt
+let _prompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); _prompt = e;
+  if (!document.getElementById('inst-banner')) showInstallBanner();
+});
+function showInstallBanner() {
+  const d = document.createElement('div');
+  d.id = 'inst-banner';
+  d.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#211f1a;border:1px solid #e8a84c;border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:14px;z-index:400;box-shadow:0 8px 30px rgba(0,0,0,.5);font-family:DM Sans,sans-serif;max-width:320px;width:90%;';
+  d.innerHTML = '<span style="font-size:1.8rem">🌱</span><div style="flex:1"><div style="font-size:.8rem;color:#f2ede4;font-weight:500">App installieren</div><div style="font-size:.67rem;color:#7a7060;margin-top:3px">Zum Homescreen für echte Push-Benachrichtigungen</div></div><div style="display:flex;flex-direction:column;gap:6px"><button onclick="doInstall()" style="background:linear-gradient(135deg,#e8a84c,#c97d4e);border:none;color:#1a1610;font-family:inherit;font-size:.72rem;font-weight:600;padding:7px 12px;border-radius:8px;cursor:pointer">Installieren</button><button onclick="document.getElementById(chr(39)+inst-banner+chr(39)).remove()" style="background:none;border:none;color:#7a7060;font-size:.65rem;cursor:pointer;font-family:inherit">Spaeter</button></div>';
+  d.querySelector('button:last-child').onclick = () => d.remove();
+  document.body.appendChild(d);
+}
+function doInstall() {
+  if (!_prompt) return;
+  _prompt.prompt();
+  _prompt.userChoice.then(() => { _prompt = null; const b = document.getElementById('inst-banner'); if(b) b.remove(); });
+}
+</script>
+
+</body>
+</html>
