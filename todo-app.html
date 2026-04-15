@@ -15,6 +15,74 @@
   <link rel="manifest" id="pwa-manifest" />
 
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Supabase -->
+  <script>
+    const SUPABASE_URL = 'https://ecxnoyrnsozvfbbgzhuu.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_dJAiYEcRWJbt0DQiaznLIQ_b7tTECNh';
+    const USER_ID = 'default_user';
+
+    async function sbFetch(method, path, body) {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+        method,
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': method === 'POST' ? 'return=representation' : 'return=representation'
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      if (!res.ok) { const e = await res.text(); console.error('Supabase error:', e); return null; }
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function loadGoals() {
+      const data = await sbFetch('GET', 'goals?user_id=eq.' + USER_ID + '&order=created_at.desc', null);
+      return (data || []).map(g => ({
+        id: g.id,
+        text: g.text,
+        done: g.done,
+        repeat: g.repeat,
+        category: g.category,
+        dueDate: g.due_date,
+        remindTime: g.remind_time,
+        reachedDate: g.reached_date,
+        createdAt: new Date(g.created_at).getTime()
+      }));
+    }
+
+    async function createGoal(g) {
+      const data = await sbFetch('POST', 'goals', {
+        user_id: USER_ID,
+        text: g.text,
+        done: g.done,
+        repeat: g.repeat,
+        category: g.category,
+        due_date: g.dueDate || null,
+        remind_time: g.remindTime || null,
+        reached_date: g.reachedDate || null
+      });
+      return data && data[0] ? data[0].id : null;
+    }
+
+    async function updateGoal(g) {
+      await sbFetch('PATCH', 'goals?id=eq.' + g.id, {
+        text: g.text,
+        done: g.done,
+        repeat: g.repeat,
+        category: g.category,
+        due_date: g.dueDate || null,
+        remind_time: g.remindTime || null,
+        reached_date: g.reachedDate || null
+      });
+    }
+
+    async function deleteGoalDb(id) {
+      await sbFetch('DELETE', 'goals?id=eq.' + id, null);
+    }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -698,7 +766,7 @@
 <div id="toast"></div>
 
 <script>
-  let goals      = JSON.parse(localStorage.getItem('goals_v1') || '[]');
+  let goals = []; // loaded from Supabase
   let timers     = {};
   let activeTab  = 'all';
   let activeFilter = 'all';
@@ -853,6 +921,7 @@
     g.category   = document.getElementById('edit-cat').value;
     g.dueDate    = document.getElementById('edit-date').value || null;
     g.remindTime = document.getElementById('edit-time').value || null;
+    updateGoal(g);
     save();
     scheduleNotification(g);
     closeEditSheet();
@@ -863,7 +932,11 @@
   function scheduleAll() { goals.forEach(scheduleNotification); }
 
   // ── Helpers ───────────────────────────────────────────
-  function save() { localStorage.setItem('goals_v1', JSON.stringify(goals)); }
+  function save() {
+    // Supabase saves happen per operation (createGoal/updateGoal/deleteGoalDb)
+    // localStorage as fallback cache
+    try { localStorage.setItem('goals_cache', JSON.stringify(goals)); } catch(e) {}
+  }
   function today() { return new Date().toISOString().slice(0,10); }
   function needsAttention(g) { return !g.done && g.dueDate && g.dueDate < today(); }
   function isDueToday(g)     { return g.dueDate === today(); }
@@ -901,9 +974,13 @@
       remindTime:document.getElementById('remind-time').value || null,
     };
 
-    goals.unshift(g);
-    save();
-    scheduleNotification(g);
+    // Save to Supabase first, get real ID back
+    createGoal(g).then(newId => {
+      if (newId) g.id = newId;
+      goals.unshift(g);
+      scheduleNotification(g);
+      try { localStorage.setItem('goals_cache', JSON.stringify(goals)); } catch(e) {}
+    });
 
     document.getElementById('goal-input').value  = '';
     document.getElementById('due-date').value    = today();
@@ -936,6 +1013,7 @@
     }
 
     updateStreak();
+    updateGoal(g);
     save(); render();
   }
 
@@ -974,6 +1052,7 @@
   // ── Delete ────────────────────────────────────────────
   function deleteGoal(id) {
     clearTimeout(timers[id]);
+    deleteGoalDb(id);
     goals = goals.filter(g => g.id !== id);
     save(); render();
   }
@@ -1159,9 +1238,31 @@
   setGreeting();
   setQuote();
   initNotif();
-  scheduleAll();
-  updateStreak();
-  render();
+
+  // Show loading state
+  document.getElementById('goal-list').innerHTML = '<li class="empty"><div class="empty-icon">🌱</div><div class="empty-title">Ziele werden geladen…</div></li>';
+
+  // Load from Supabase
+  loadGoals().then(data => {
+    goals = data;
+    // fallback to cache if empty and cache exists
+    if (goals.length === 0) {
+      try {
+        const cached = JSON.parse(localStorage.getItem('goals_cache') || '[]');
+        if (cached.length > 0) goals = cached;
+      } catch(e) {}
+    }
+    scheduleAll();
+    updateStreak();
+    render();
+  }).catch(err => {
+    console.error('Load error:', err);
+    // Fallback to cache
+    try { goals = JSON.parse(localStorage.getItem('goals_cache') || '[]'); } catch(e) {}
+    scheduleAll();
+    updateStreak();
+    render();
+  });
 </script>
 
 
